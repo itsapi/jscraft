@@ -53,12 +53,14 @@ function delete_chunk(chunk_id) {
 function create_block(block_id, position) {
   if (blocks[block_id]) {
     var geometry = new THREE.BoxGeometry(1,1,2);
-    var material = new THREE.MeshPhongMaterial({color: 0x00ff00});
+    var material = new THREE.MeshLambertMaterial({color: 0x00ff00});
 
     var block = new THREE.Mesh(geometry, material);
     block.position.x = position.x;
     block.position.y = position.y;
     block.position.z = -.5;
+
+    block.receiveShadow = true;
 
     scene.add(block);
 
@@ -103,13 +105,23 @@ function load_chunks() {
 
 
 function create_player(position) {
-  var geometry = new THREE.CircleGeometry(.5, 16);
-  var material = new THREE.MeshPhongMaterial({color: 0x0000ff});
+
+  var bitmap = new Image();
+  bitmap.src = 'world.jpg';
+  bitmap.onerror = function () {
+    console.error("Error loading: " + bitmap.src);
+  }
+  var texture = THREE.ImageUtils.loadTexture(bitmap.src);
+  var geometry = new THREE.SphereGeometry(.5, 64, 64);
+  var material = new THREE.MeshLambertMaterial({map: texture});
 
   var player = new THREE.Mesh(geometry, material);
   player.position.x = position.x;
   player.position.y = position.y;
   player.position.z = -.5;
+
+  player.castShadow = true;
+  player.receiveShadow = true;
 
   scene.add(player);
 
@@ -120,14 +132,23 @@ function create_player(position) {
 function render() {
   requestAnimationFrame(render);
 
-  if (player.position.x != old_x) {
+  if (Math.abs(player.position.x - old_x) >= 1) {
     load_chunks();
+    old_x = player.position.x;
   }
-  old_x = player.position.x;
 
   camera.position.x = player.position.x;
   camera.position.y = player.position.y - (cam_dist * Math.tan(cam_rot));
-  light.position.set(player.position.x, 30, 3);
+
+  light.position.x = player.position.x;
+  light.target.position.x = player.position.x;
+  light.target.position.y = player.position.y;
+  light.target.position.z = player.position.z;
+
+  shadow_light.position.x = player.position.x;
+  shadow_light.target.position.x = player.position.x;
+  shadow_light.target.position.y = player.position.y;
+  shadow_light.target.position.z = player.position.z;
 
   renderer.render(scene, camera);
 }
@@ -154,8 +175,30 @@ var camera = new THREE.PerspectiveCamera(FOV, width / height, 1, 1000);
 camera.position.z = cam_dist;
 camera.rotation.x = cam_rot;
 
+// Light
+scene.add(new THREE.AmbientLight(0x202020));
+
+var light = new THREE.DirectionalLight(0x404040, 2);
+light.position.y = -10;
+light.position.z = cam_dist / 3;
+scene.add(light);
+
+var shadow_light = new THREE.SpotLight(0x404040, 5, 200);
+shadow_light.position.y = 30;
+shadow_light.position.z =  0;
+shadow_light.castShadow = true;
+shadow_light.shadowMapWidth = 1024;
+shadow_light.shadowMapHeight = 1024;
+shadow_light.shadowCameraNear = 5;
+shadow_light.shadowCameraFar = 50;
+shadow_light.shadowCameraFov = 30;
+scene.add(shadow_light);
+
+// Renderer
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize(width, height);
+renderer.shadowMapEnabled = true;
+renderer.shadowMapSoft = true;
 document.body.appendChild(renderer.domElement);
 
 // Player
