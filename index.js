@@ -2,7 +2,6 @@ var app = require('http').createServer(handler),
     io = require('socket.io')(app),
     url = require('url'),
     util = require('util'),
-    fs = require('fs'),
     file = new (require('node-static').Server)('./client');
 
 
@@ -44,12 +43,7 @@ function handler(req, res) {
     }
 }
 
-io.on('connection', function (socket) {
-  socket.on('get_chunks', function (data) {
-    console.log(data);
-    socket.emit('chunks', load_chunks(data));
-  });
-});
+io.on('connection', function (socket) {});
 
 app.listen(port);
 console.log('Server running on port', port);
