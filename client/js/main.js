@@ -53,7 +53,7 @@ function delete_chunk(chunk_id) {
 function create_block(block_id, position) {
   if (blocks[block_id]) {
     var geometry = new THREE.BoxGeometry(1,1,2);
-    var material = new THREE.MeshNormalMaterial({color: 0x00ff00});
+    var material = new THREE.MeshPhongMaterial({color: 0x00ff00});
 
     var block = new THREE.Mesh(geometry, material);
     block.position.x = position.x;
@@ -103,8 +103,8 @@ function load_chunks() {
 
 
 function create_player(position) {
-  var geometry = new THREE.BoxGeometry(1,1,1);
-  var material = new THREE.MeshNormalMaterial({color: 0x0000ff});
+  var geometry = new THREE.CircleGeometry(.5, 16);
+  var material = new THREE.MeshPhongMaterial({color: 0x0000ff});
 
   var player = new THREE.Mesh(geometry, material);
   player.position.x = position.x;
@@ -127,6 +127,7 @@ function render() {
 
   camera.position.x = player.position.x;
   camera.position.y = player.position.y - (cam_dist * Math.tan(cam_rot));
+  light.position.set(player.position.x, 30, 3);
 
   renderer.render(scene, camera);
 }
