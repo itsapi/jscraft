@@ -8,6 +8,18 @@ var app = require('http').createServer(handler),
 
 var port = 6001;
 
+function load_chunks(chunk_ids) {
+    chunks = {};
+    for (var i in chunk_ids) {
+        try {
+            chunks[chunk_ids[i]] = require('./chunks/' + chunk_ids[i]);
+        } catch (e) {
+            console.log('Chunk %s out of range', chunk_ids[i]);
+        }
+    }
+    return chunks;
+}
+
 function handler(req, res) {
     if (req.method == 'GET') {
         file.serve(req, res, function(err, result) {
