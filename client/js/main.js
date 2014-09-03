@@ -112,7 +112,7 @@ var server_chunks = {
 var blocks = {
   ' ': 0,
   '#': 1
-}
+};
 var chunk_size = 16;
 var chunks = {};
 
@@ -144,7 +144,7 @@ function delete_chunk(chunk_id) {
   for (x in chunk) {
     x = x.toString();
 
-    for (y in chunk[x]) {
+    for (var y in chunk[x]) {
       y = y.toString();
 
       scene.remove(chunk[x][y]);
@@ -182,13 +182,14 @@ function load_chunks() {
   }
 
   // Delete old chunks
-  for (key in loaded_chunks) {
+  for (var key in loaded_chunks) {
     var loaded_chunk_id = loaded_chunks[key];
 
     if (new_chunks.indexOf(loaded_chunk_id) == -1) {
       delete_chunk(loaded_chunk_id);
     }
   }
+
   // Load new chunks
   for (key in new_chunks) {
     var new_chunk_id = new_chunks[key];
@@ -226,7 +227,7 @@ function render() {
   camera.position.y = player.position.y - (cam_dist * Math.tan(cam_rot));
 
   renderer.render(scene, camera);
-};
+}
 
 
 function rad(deg) {
@@ -252,10 +253,9 @@ var renderer = new THREE.WebGLRenderer();
 renderer.setSize(width, height);
 document.body.appendChild(renderer.domElement);
 
-var player = create_player({x: 0, y: 15})
+var player = create_player({x: 0, y: 15});
 
 var old_x;
-
 render();
 
-setInterval(function () {player.position.x += 1}, 500)
+setInterval(function () {player.position.x += 1}, 500);
