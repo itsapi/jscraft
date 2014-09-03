@@ -1,0 +1,9 @@
+{
+  "name": "jscraft",
+  "repository": "http://github.com/itsapi/jscraft.git",
+  "version": "0.0.1",
+  "devDependencies": {
+    "node-static": "~0.7.4",
+    "socket.io": "~1.0.6"
+  }
+}
