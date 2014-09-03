@@ -113,10 +113,7 @@ var blocks = {
   ' ': 0,
   '#': 1
 }
-
 var chunk_size = 16;
-
-
 var chunks = {};
 
 
@@ -179,7 +176,7 @@ function load_chunks() {
   var new_chunks = [];
 
   var check_x = player.position.x - (half_screen_blocks + chunk_size);
-  while (check_x <= player.position.x + (half_screen_blocks + (chunk_size * .5))) {/////////////////////////////////////
+  while (check_x <= player.position.x + (half_screen_blocks + chunk_size)) {
     new_chunks.push(Math.floor(check_x / chunk_size));
     check_x += chunk_size;
   }
