@@ -139,9 +139,9 @@ function rad(deg) {
 
 
 var socket = io('http://2.2.2.110:6001');
-
 var scene = new THREE.Scene();
 
+// Camera
 var width = window.innerWidth;
 var height = window.innerHeight;
 var FOV = 30;
@@ -158,9 +158,19 @@ var renderer = new THREE.WebGLRenderer();
 renderer.setSize(width, height);
 document.body.appendChild(renderer.domElement);
 
+// Player
 var player = create_player({x: 0, y: 15});
 
-var old_x;
+// Start
+var old_x = 1;
 render();
 
-setInterval(function () {player.position.x -= 1}, 200);
+d = .2
+setInterval(function () {
+  player.position.x += d;
+  if (player.position.x < -43) {
+    d = .2
+  } else if (player.position.x > 42) {
+    d = -.2
+  }
+}, 20);
