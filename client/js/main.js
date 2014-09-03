@@ -7,7 +7,7 @@ var screen_chunks = {};
 
 
 function get_chunks(chunk_ids, cb) {
-  socket.emit('get_chunks', {chunk_ids: chunk_ids});
+  socket.emit('get_chunks', chunk_ids);
   socket.on('chunks', function (chunks) {
     cb(chunks);
   });
