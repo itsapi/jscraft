@@ -7,9 +7,9 @@ var screen_chunks = {};
 
 
 function get_chunks(chunk_ids, cb) {
-  socket.emit('get_chunks', chunk_ids);
-  socket.on('chunks', function (chunks) {
-    cb(chunks);
+  microAjax('http://2.2.2.110:6001?chunk_ids=' + chunk_ids.toString(), function (chunks) {
+    cb(JSON.parse(chunks));
+
   });
 }
 
@@ -18,16 +18,13 @@ function add_chunks(chunk_ids) {
   get_chunks(chunk_ids, function (chunks) {
 
     for (var chunk_id in chunks) {
-      chunk_id = chunk_id.toString();
       var chunk = chunks[chunk_id];
       screen_chunks[chunk_id] = {};
 
       for (var x in chunk) {
-        x = x.toString();
         screen_chunks[chunk_id][x] = {};
 
         for (var y in chunk[x]) {
-          y = y.toString();
 
           var block_id = chunk[x][y];
           screen_chunks[chunk_id][x][y] = create_block(block_id, {x: parseInt(x), y: parseInt(y)});
@@ -40,15 +37,11 @@ function add_chunks(chunk_ids) {
 
 
 function delete_chunk(chunk_id) {
-  chunk_id = chunk_id.toString();
+  chunk_id = chunk_id;
 
   var chunk = screen_chunks[chunk_id];
   for (var x in chunk) {
-    x = x.toString();
-
     for (var y in chunk[x]) {
-      y = y.toString();
-
       scene.remove(chunk[x][y]);
     }
 
@@ -59,12 +52,13 @@ function delete_chunk(chunk_id) {
 
 function create_block(block_id, position) {
   if (blocks[block_id]) {
-    var geometry = new THREE.BoxGeometry(1,1,1);
+    var geometry = new THREE.BoxGeometry(1,1,2);
     var material = new THREE.MeshNormalMaterial({color: 0x00ff00});
 
     var block = new THREE.Mesh(geometry, material);
     block.position.x = position.x;
     block.position.y = position.y;
+    block.position.z = -.5;
 
     scene.add(block);
 
@@ -79,7 +73,7 @@ function load_chunks() {
 
   var check_x = player.position.x - (half_screen_blocks + chunk_size);
   while (check_x <= player.position.x + (half_screen_blocks + chunk_size)) {
-    new_chunks.push(Math.floor(check_x / chunk_size));
+    new_chunks.push((Math.floor(check_x / chunk_size)).toString());
     check_x += chunk_size;
   }
 
@@ -98,10 +92,13 @@ function load_chunks() {
     var new_chunk_id = new_chunks[key];
 
     if (loaded_chunks.indexOf(new_chunk_id) == -1) {
-      chunks_to_add.push(new_chunk_id);
+      chunks_to_add.push(new_chunk_id.toString());
     }
   }
-  add_chunks(chunks_to_add);
+
+  if (chunks_to_add.length > 0) {
+    add_chunks(chunks_to_add);
+  }
 }
 
 
@@ -112,6 +109,7 @@ function create_player(position) {
   var player = new THREE.Mesh(geometry, material);
   player.position.x = position.x;
   player.position.y = position.y;
+  player.position.z = -.5;
 
   scene.add(player);
 
@@ -147,7 +145,7 @@ var width = window.innerWidth;
 var height = window.innerHeight;
 var FOV = 30;
 var cam_dist = 30;
-var cam_rot = -Math.PI / 18;
+var cam_rot = -Math.PI / 12;
 var H_FOV = 2 * Math.atan(Math.tan(rad(FOV) / 2) * (width / height));
 var half_screen_blocks = Math.ceil(cam_dist * Math.tan(H_FOV / 2));
 
@@ -164,4 +162,4 @@ var player = create_player({x: 0, y: 15});
 var old_x;
 render();
 
-setInterval(function () {player.position.x += 1}, 500);
+setInterval(function () {player.position.x -= 1}, 200);
