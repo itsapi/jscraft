@@ -1,147 +1,49 @@
-var server_chunks = {
-  '-3': {
-    '-48': '###############               ',
-    '-47': '##################            ',
-    '-46': '###############               ',
-    '-45': '################              ',
-    '-44': '################              ',
-    '-43': '#################             ',
-    '-42': '#################             ',
-    '-41': '##################            ',
-    '-40': '##################            ',
-    '-39': '#################             ',
-    '-38': '#################             ',
-    '-37': '################              ',
-    '-36': '################              ',
-    '-35': '###############               ',
-    '-34': '###############               ',
-    '-33': '###############               '
-  },
-  '-2': {
-    '-32': '###############               ',
-    '-31': '###############               ',
-    '-30': '###############               ',
-    '-29': '##############                ',
-    '-28': '##############                ',
-    '-27': '#############                 ',
-    '-26': '#############                 ',
-    '-25': '############                  ',
-    '-24': '############                  ',
-    '-23': '#############                 ',
-    '-22': '#############                 ',
-    '-21': '##############                ',
-    '-20': '##############                ',
-    '-19': '###############               ',
-    '-18': '###############               ',
-    '-17': '###############               '
-  },
-  '-1': {
-    '-16': '###############               ',
-    '-15': '###############               ',
-    '-14': '###############               ',
-    '-13': '################              ',
-    '-12': '################              ',
-    '-11': '#################             ',
-    '-10': '#################             ',
-    '-9':  '##################            ',
-    '-8':  '##################            ',
-    '-7':  '#################             ',
-    '-6':  '#################             ',
-    '-5':  '################              ',
-    '-4':  '################              ',
-    '-3':  '###############               ',
-    '-2':  '###############               ',
-    '-1':  '###############               '
-  },
-  '0': {
-     '0':  '###############               ',
-     '1':  '###############               ',
-     '2':  '###############               ',
-     '3':  '##############                ',
-     '4':  '##############                ',
-     '5':  '#############                 ',
-     '6':  '#############                 ',
-     '7':  '############                  ',
-     '8':  '############                  ',
-     '9':  '#############                 ',
-     '10': '#############                 ',
-     '11': '##############                ',
-     '12': '##############                ',
-     '13': '###############               ',
-     '14': '###############               ',
-     '15': '###############               '
-  },
-  '1': {
-     '16': '###############               ',
-     '17': '###############               ',
-     '18': '###############               ',
-     '19': '################              ',
-     '20': '################              ',
-     '21': '#################             ',
-     '22': '#################             ',
-     '23': '##################            ',
-     '24': '##################            ',
-     '25': '#################             ',
-     '26': '#################             ',
-     '27': '################              ',
-     '28': '################              ',
-     '29': '###############               ',
-     '30': '###############               ',
-     '31': '###############               '
-  },
-  '2': {
-     '32': '###############               ',
-     '33': '###############               ',
-     '34': '###############               ',
-     '35': '##############                ',
-     '36': '##############                ',
-     '37': '#############                 ',
-     '38': '#############                 ',
-     '39': '############                  ',
-     '40': '############                  ',
-     '41': '#############                 ',
-     '42': '#############                 ',
-     '43': '##############                ',
-     '44': '##############                ',
-     '45': '###############               ',
-     '46': '##################            ',
-     '47': '###############               '
-  }
-}
-
 var blocks = {
   ' ': 0,
   '#': 1
 };
 var chunk_size = 16;
-var chunks = {};
+var screen_chunks = {};
 
 
-function add_chunk(chunk_id) {
-  chunk_id = chunk_id.toString();
-  chunks[chunk_id] = {};
+function get_chunks(chunk_ids, cb) {
+  socket.emit('get_chunks', {chunk_ids: chunk_ids});
+  socket.on('chunks', function (chunks) {
+    cb(chunks);
+  });
+}
 
-  var chunk = server_chunks[chunk_id];
-  for (x in chunk) {
-    x = x.toString();
-    chunks[chunk_id][x] = {};
 
-    for (y in chunk[x]) {
-      y = y.toString();
+function add_chunks(chunk_ids) {
+  get_chunks(chunk_ids, function (chunks) {
 
-      var block_id = chunk[x][y];
-      chunks[chunk_id][x][y] = create_block(block_id, {x: parseInt(x), y: parseInt(y)});
+    for (var chunk_id in chunks) {
+      chunk_id = chunk_id.toString();
+      var chunk = chunks[chunk_id];
+      screen_chunks[chunk_id] = {};
+
+      for (var x in chunk) {
+        x = x.toString();
+        screen_chunks[chunk_id][x] = {};
+
+        for (var y in chunk[x]) {
+          y = y.toString();
+
+          var block_id = chunk[x][y];
+          screen_chunks[chunk_id][x][y] = create_block(block_id, {x: parseInt(x), y: parseInt(y)});
+        }
+      }
     }
 
-  }
+  });
 }
 
 
 function delete_chunk(chunk_id) {
   chunk_id = chunk_id.toString();
 
-  var chunk = chunks[chunk_id];
-  for (x in chunk) {
+  var chunk = screen_chunks[chunk_id];
+  for (var x in chunk) {
     x = x.toString();
 
     for (var y in chunk[x]) {
@@ -151,7 +53,7 @@ function delete_chunk(chunk_id) {
     }
 
   }
-  delete chunks[chunk_id];
+  delete screen_chunks[chunk_id];
 }
 
 
@@ -172,7 +74,7 @@ function create_block(block_id, position) {
 
 
 function load_chunks() {
-  var loaded_chunks = Object.keys(chunks);
+  var loaded_chunks = Object.keys(screen_chunks);
   var new_chunks = [];
 
   var check_x = player.position.x - (half_screen_blocks + chunk_size);
@@ -191,13 +93,15 @@ function load_chunks() {
   }
 
   // Load new chunks
-  for (key in new_chunks) {
+  var chunks_to_add = []
+  for (var key in new_chunks) {
     var new_chunk_id = new_chunks[key];
 
     if (loaded_chunks.indexOf(new_chunk_id) == -1) {
-      add_chunk(new_chunk_id);
+      chunks_to_add.push(new_chunk_id);
     }
   }
+  add_chunks(chunks_to_add);
 }
 
 
@@ -234,6 +138,8 @@ function rad(deg) {
   return deg * Math.PI / 180;
 }
 
+
+var socket = io('http://2.2.2.110:6001');
 
 var scene = new THREE.Scene();
 
