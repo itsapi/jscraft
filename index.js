@@ -17,7 +17,7 @@ function handler(req, res) {
                 res.write(util.format('Error: %s - %s', err.status, err.message));
                 res.end();
             } else {
-                console.log('%s - %s', req.url, res.message); 
+                console.log('%s - %s', req.url, res.message);
             }
         });
     }
