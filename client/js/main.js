@@ -63,7 +63,7 @@ function create_block(block_id, position) {
     var block = new THREE.Mesh(geometry, material);
     block.position.x = position.x;
     block.position.y = position.y;
-    block.position.z = -.5;
+    block.position.z = -0.5;
 
     block.receiveShadow = true;
 
@@ -96,7 +96,7 @@ function load_chunks() {
   }
 
   // Load new chunks
-  var chunks_to_add = []
+  var chunks_to_add = [];
   for (var key in new_chunks) {
     var new_chunk_id = new_chunks[key];
 
@@ -116,16 +116,16 @@ function create_player(position) {
   bitmap.src = 'world.jpg';
   bitmap.onerror = function () {
     console.error("Error loading: " + bitmap.src);
-  }
+  };
 
   var texture = THREE.ImageUtils.loadTexture(bitmap.src);
-  var geometry = new THREE.SphereGeometry(.5, 64, 64);
+  var geometry = new THREE.SphereGeometry(0.5, 64, 64);
   var material = new THREE.MeshLambertMaterial({map: texture});
 
   var player = new THREE.Mesh(geometry, material);
   player.position.x = position.x;
   player.position.y = position.y;
-  player.position.z = -.5;
+  player.position.z = -0.5;
 
   player.velocity = {x: 0, y: 0};
 
@@ -161,7 +161,7 @@ function render() {
     player.velocity.x = 0;
   }
 
-  player.velocity.y -= .1;
+  player.velocity.y -= 0.1;
 
 
   if (player.velocity.x && !solid_in_x(player.position, player.velocity)) {
@@ -201,9 +201,9 @@ function solid_in_x(position, velocity) {
   var x = Math.floor(position.x + velocity.x + (velocity.x < 0 ? (1-r) : r));
   var chunk = Math.floor(x / chunk_size);
 
-  if (screen_chunks[chunk] == undefined) {
+  if (screen_chunks[chunk] === undefined) {
     return false;
-  } else if (screen_chunks[chunk][x][Math.floor(position.y)] == undefined) {
+  } else if (screen_chunks[chunk][x][Math.floor(position.y)] === undefined) {
     return false;
   } else {
     return screen_chunks[chunk][x][Math.floor(position.y)].block.solid;
@@ -215,9 +215,9 @@ function solid_in_y(position, velocity) {
   var y = Math.floor(position.y + velocity.y + (velocity.y < 0 ? (-1) : r));
   var chunk = Math.floor(position.x / chunk_size);
 
-  if (screen_chunks[chunk] == undefined) {
+  if (screen_chunks[chunk] === undefined) {
     return false;
-  } else if (screen_chunks[chunk][Math.floor(position.x)][y] == undefined) {
+  } else if (screen_chunks[chunk][Math.floor(position.x)][y] === undefined) {
     return false;
   } else {
     return screen_chunks[chunk][Math.floor(position.x)][y].block.solid;
