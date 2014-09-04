@@ -1,6 +1,11 @@
 var blocks = {
-  ' ': 0,
-  '#': 1
+  ' ': {
+    solid: false
+  },
+  '#': {
+    color: 0x00ff00,
+    solid: true
+  }
 };
 var chunk_size = 16;
 var screen_chunks = {};
@@ -51,9 +56,9 @@ function delete_chunk(chunk_id) {
 
 
 function create_block(block_id, position) {
-  if (blocks[block_id]) {
+  if (block_id != ' ') {
     var geometry = new THREE.BoxGeometry(1,1,2);
-    var material = new THREE.MeshLambertMaterial({color: 0x00ff00});
+    var material = new THREE.MeshLambertMaterial({color: blocks[block_id].color});
 
     var block = new THREE.Mesh(geometry, material);
     block.position.x = position.x;
@@ -61,6 +66,8 @@ function create_block(block_id, position) {
     block.position.z = -.5;
 
     block.receiveShadow = true;
+
+    block.block = blocks[block_id];
 
     scene.add(block);
 
@@ -105,12 +112,12 @@ function load_chunks() {
 
 
 function create_player(position) {
-
   var bitmap = new Image();
   bitmap.src = 'world.jpg';
   bitmap.onerror = function () {
     console.error("Error loading: " + bitmap.src);
   }
+
   var texture = THREE.ImageUtils.loadTexture(bitmap.src);
   var geometry = new THREE.SphereGeometry(.5, 64, 64);
   var material = new THREE.MeshLambertMaterial({map: texture});
@@ -119,6 +126,8 @@ function create_player(position) {
   player.position.x = position.x;
   player.position.y = position.y;
   player.position.z = -.5;
+
+  player.velocity = {x: 0, y: 0};
 
   player.castShadow = true;
   player.receiveShadow = true;
@@ -137,6 +146,38 @@ function render() {
     old_x = player.position.x;
   }
 
+
+  // Pyhsics and controls
+  if (keyboard.pressed('a')) {
+    player.velocity.x = -1;
+  }
+  if (keyboard.pressed('d')) {
+    player.velocity.x = 1;
+  }
+  if (keyboard.pressed('w')) {
+    player.velocity.y = 1;
+  }
+  if (keyboard.pressed('s')) {
+    player.velocity.x = 0;
+  }
+
+  player.velocity.y -= .1;
+
+
+  if (player.velocity.x && !solid_in_x(player.position, player.velocity)) {
+    player.position.x += player.velocity.x;
+  } else {
+    player.velocity.x = 0;
+  }
+
+  if (player.velocity.y && !solid_in_y(player.position, player.velocity)) {
+    player.position.y += player.velocity.y;
+  } else {
+    player.velocity.y = 0;
+  }
+
+
+  // Camera, light positions
   camera.position.x = player.position.x;
   camera.position.y = player.position.y - (cam_dist * Math.tan(cam_rot));
 
@@ -150,7 +191,37 @@ function render() {
   shadow_light.target.position.y = player.position.y;
   shadow_light.target.position.z = player.position.z;
 
+
   renderer.render(scene, camera);
+}
+
+
+function solid_in_x(position, velocity) {
+  var r = player.geometry.boundingSphere.radius;
+  var x = Math.floor(position.x + velocity.x + (velocity.x < 0 ? (1-r) : r));
+  var chunk = Math.floor(x / chunk_size);
+
+  if (screen_chunks[chunk] == undefined) {
+    return false;
+  } else if (screen_chunks[chunk][x][Math.floor(position.y)] == undefined) {
+    return false;
+  } else {
+    return screen_chunks[chunk][x][Math.floor(position.y)].block.solid;
+  }
+}
+
+function solid_in_y(position, velocity) {
+  var r = player.geometry.boundingSphere.radius;
+  var y = Math.floor(position.y + velocity.y + (velocity.y < 0 ? (-1) : r));
+  var chunk = Math.floor(position.x / chunk_size);
+
+  if (screen_chunks[chunk] == undefined) {
+    return false;
+  } else if (screen_chunks[chunk][Math.floor(position.x)][y] == undefined) {
+    return false;
+  } else {
+    return screen_chunks[chunk][Math.floor(position.x)][y].block.solid;
+  }
 }
 
 
@@ -160,6 +231,7 @@ function rad(deg) {
 
 
 var socket = io('http://2.2.2.110:6001');
+var keyboard = new THREEx.KeyboardState();
 var scene = new THREE.Scene();
 
 // Camera
@@ -207,13 +279,3 @@ var player = create_player({x: 0, y: 15});
 // Start
 var old_x = 1;
 render();
-
-d = .2
-setInterval(function () {
-  player.position.x += d;
-  if (player.position.x < -43) {
-    d = .2
-  } else if (player.position.x > 42) {
-    d = -.2
-  }
-}, 20);
