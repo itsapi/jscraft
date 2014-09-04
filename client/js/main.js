@@ -138,14 +138,11 @@ function create_player(position) {
 }
 
 
-function render() {
-  requestAnimationFrame(render);
-
+function controls() {
   if (Math.abs(player.position.x - old_x) >= 1) {
     load_chunks();
     old_x = player.position.x;
   }
-
 
   // Pyhsics and controls
   if (keyboard.pressed('a')) {
@@ -160,10 +157,12 @@ function render() {
   if (keyboard.pressed('s')) {
     player.velocity.x = 0;
   }
-
+  if (player.velocity.x >= 0.1) {
+    player.velocity.x -= 0.1;
+  }
   player.velocity.y -= 0.1;
 
-
+  // Collision detection
   if (player.velocity.x && !solid_in_x(player.position, player.velocity)) {
     player.position.x += player.velocity.x;
   } else {
@@ -176,6 +175,12 @@ function render() {
     player.velocity.y = 0;
   }
 
+  setTimeout(controls, 100);
+}
+
+
+function render() {
+  requestAnimationFrame(render);
 
   // Camera, light positions
   camera.position.x = player.position.x;
@@ -190,7 +195,6 @@ function render() {
   shadow_light.target.position.x = player.position.x;
   shadow_light.target.position.y = player.position.y;
   shadow_light.target.position.z = player.position.z;
-
 
   renderer.render(scene, camera);
 }
@@ -278,4 +282,5 @@ var player = create_player({x: 0, y: 15});
 
 // Start
 var old_x = 1;
+controls();
 render();
