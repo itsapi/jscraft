@@ -12,6 +12,7 @@ function load_chunks(chunk_ids) {
     for (var i in chunk_ids) {
         try {
             chunks[chunk_ids[i]] = require('./chunks/' + chunk_ids[i]);
+            console.log('Loading chunk', chunk_ids[i]);
         } catch (e) {
             console.log('Chunk %s out of range', chunk_ids[i]);
         }
@@ -36,7 +37,7 @@ function handler(req, res) {
                     res.write(util.format('Error: %s - %s', err.status, err.message));
                     res.end();
                 } else {
-                    console.log('%s - %s', req.url, res.message); 
+                    console.log('%s - %s', req.url, result.message);
                 }
             });
         }
